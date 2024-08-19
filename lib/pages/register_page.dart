@@ -3,6 +3,7 @@ import 'package:chatapp/consts.dart';
 import 'package:chatapp/services/auth_service.dart';
 import 'package:chatapp/services/media_service.dart';
 import 'package:chatapp/services/navigation_service.dart';
+import 'package:chatapp/services/storage_service.dart';
 import 'package:chatapp/widgets/custom_form_field.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
@@ -21,6 +22,7 @@ class _RegisterPageState extends State<RegisterPage> {
   late AuthService _authService;
   late MediaService _mediaService;
   late NavigationService _navigationService;
+  late StorageService _storageService;
 
   String? email, password, name;
   File? selectedImage;
@@ -32,6 +34,7 @@ class _RegisterPageState extends State<RegisterPage> {
     _mediaService = _getIt.get<MediaService>();
     _navigationService = _getIt.get<NavigationService>();
     _authService = _getIt.get<AuthService>();
+    _storageService = _getIt.get<StorageService>();
   }
 
   @override
@@ -171,8 +174,10 @@ class _RegisterPageState extends State<RegisterPage> {
                 selectedImage != null) {
               _registerFormKey.currentState?.save();
               bool result = await _authService.signup(email!, password!);
-              if (result) {}
-              print(result);
+              if (result) {
+                String? pfpURL =
+                    await _storageService.uploadUserPfp(file: selectedImage!, uid: _authService.user!.uid);
+              }
             }
           } catch (e) {
             print(e);
