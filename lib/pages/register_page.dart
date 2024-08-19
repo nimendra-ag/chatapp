@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:chatapp/consts.dart';
+import 'package:chatapp/services/auth_service.dart';
 import 'package:chatapp/services/media_service.dart';
 import 'package:chatapp/services/navigation_service.dart';
 import 'package:chatapp/widgets/custom_form_field.dart';
@@ -15,18 +16,22 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   final GetIt _getIt = GetIt.instance;
+  final GlobalKey<FormState> _registerFormKey = GlobalKey();
 
+  late AuthService _authService;
   late MediaService _mediaService;
   late NavigationService _navigationService;
 
   String? email, password, name;
   File? selectedImage;
+  bool isLoading = false;
 
   @override
   void initState() {
     super.initState();
     _mediaService = _getIt.get<MediaService>();
     _navigationService = _getIt.get<NavigationService>();
+    _authService = _getIt.get<AuthService>();
   }
 
   @override
@@ -42,7 +47,15 @@ class _RegisterPageState extends State<RegisterPage> {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 20.0),
         child: Column(
-          children: [_headerText(), _registerForm(), _loginAccountLink()],
+          children: [
+            _headerText(),
+            if (!isLoading) _registerForm(),
+            if (!isLoading) _loginAccountLink(),
+            if (isLoading)
+              const Expanded(
+                child: Center(child: CircularProgressIndicator()),
+              )
+          ],
         ),
       ),
     );
@@ -83,6 +96,7 @@ class _RegisterPageState extends State<RegisterPage> {
         vertical: MediaQuery.sizeOf(context).height * 0.05,
       ),
       child: Form(
+        key: _registerFormKey,
         child: Column(
           mainAxisSize: MainAxisSize.max,
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -111,6 +125,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 hintText: "Password",
                 height: MediaQuery.sizeOf(context).height * 0.1,
                 validationRegEx: PASSWORD_VALIDATION_REGEX,
+                obscureText: true,
                 onSaved: (value) {
                   setState(() {
                     password = value;
@@ -147,7 +162,25 @@ class _RegisterPageState extends State<RegisterPage> {
       width: MediaQuery.sizeOf(context).width,
       child: MaterialButton(
         color: Theme.of(context).colorScheme.primary,
-        onPressed: () {},
+        onPressed: () async {
+          setState(() {
+            isLoading = true;
+          });
+          try {
+            if ((_registerFormKey.currentState?.validate() ?? false) &&
+                selectedImage != null) {
+              _registerFormKey.currentState?.save();
+              bool result = await _authService.signup(email!, password!);
+              if (result) {}
+              print(result);
+            }
+          } catch (e) {
+            print(e);
+          }
+          setState(() {
+            isLoading = false;
+          });
+        },
         child: const Text(
           "Register",
           style: TextStyle(color: Colors.white),
@@ -169,7 +202,7 @@ class _RegisterPageState extends State<RegisterPage> {
             _navigationService.goBack();
           },
           child: const Text(
-            "Login Up",
+            "Log In",
             style: TextStyle(
               fontWeight: FontWeight.w800,
             ),
