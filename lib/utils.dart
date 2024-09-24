@@ -1,3 +1,5 @@
+// import 'dart:nativewrappers/_internal/vm/lib/core_patch.dart';
+
 import 'package:chatapp/firebase_options.dart';
 import 'package:chatapp/services/alert_service.dart';
 import 'package:chatapp/services/auth_service.dart';
@@ -26,4 +28,11 @@ Future<void> registerServices() async {
   getIt.registerSingleton<MediaService>(MediaService());
   getIt.registerSingleton<StorageService>(StorageService());
   getIt.registerSingleton<DatabaseService>(DatabaseService());
+}
+
+String generateChatID({required String uid1, required String uid2}) {
+  List uids = [uid1, uid2];
+  uids.sort();
+  String chatID = uids.fold("", (id, uid) => "$id$uid");
+  return chatID;
 }
